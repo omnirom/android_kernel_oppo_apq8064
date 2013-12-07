@@ -29,6 +29,13 @@
 #include <linux/of_platform.h>
 #include <linux/of_gpio.h>
 #include <linux/spinlock.h>
+#include <linux/earlysuspend.h>
+
+#ifdef CONFIG_HAS_EARLYSUSPEND
+struct early_suspend gpio_keys_early_suspender;
+struct early_suspend gpio_keys_late_suspender;
+static bool suspended = false;
+#endif
 
 struct gpio_button_data {
 	const struct gpio_keys_button *button;
@@ -330,6 +337,14 @@ static void gpio_keys_gpio_report_event(struct gpio_button_data *bdata)
 	struct input_dev *input = bdata->input;
 	unsigned int type = button->type ?: EV_KEY;
 	int state = (gpio_get_value_cansleep(button->gpio) ? 1 : 0) ^ button->active_low;
+	const char *desc = button->desc ? button->desc : "gpio_keys";
+
+	//pr_info("%s: %s %d %d %d %d\n", __func__, desc, button->gpio, button->value, state, button->suspend_disable);
+
+	if (suspended && button->suspend_disable){
+		pr_info("%s: ignore key %s during suspended\n", __func__, desc);
+		return;
+	}
 
 	if (type == EV_ABS) {
 		if (state)
@@ -814,6 +829,29 @@ static int gpio_keys_resume(struct device *dev)
 }
 #endif
 
+#ifdef CONFIG_HAS_EARLYSUSPEND
+static void gpio_keys_late_resume(struct early_suspend *h)
+{
+	pr_info("%s:\n", __func__);
+}
+
+static void gpio_keys_early_resume(struct early_suspend *h)
+{
+	pr_info("%s:\n", __func__);
+	suspended = false;
+}
+static void gpio_keys_late_suspend(struct early_suspend *h)
+{
+	pr_info("%s:\n", __func__);
+}
+
+static void gpio_keys_early_suspend(struct early_suspend *h)
+{
+	pr_info("%s:\n", __func__);
+	suspended = true;
+}
+#endif
+
 static SIMPLE_DEV_PM_OPS(gpio_keys_pm_ops, gpio_keys_suspend, gpio_keys_resume);
 
 static struct platform_driver gpio_keys_device_driver = {
@@ -829,11 +867,27 @@ static struct platform_driver gpio_keys_device_driver = {
 
 static int __init gpio_keys_init(void)
 {
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	gpio_keys_late_suspender.resume = gpio_keys_late_resume;
+	gpio_keys_late_suspender.suspend = gpio_keys_late_suspend;
+	gpio_keys_late_suspender.level = EARLY_SUSPEND_LEVEL_DISABLE_FB + 100;
+	register_early_suspend(&gpio_keys_late_suspender);
+
+	gpio_keys_early_suspender.resume = gpio_keys_early_resume;
+	gpio_keys_early_suspender.suspend = gpio_keys_early_suspend;
+	gpio_keys_early_suspender.level = 0;
+	register_early_suspend(&gpio_keys_early_suspender);
+#endif
+
 	return platform_driver_register(&gpio_keys_device_driver);
 }
 
 static void __exit gpio_keys_exit(void)
 {
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	unregister_early_suspend(&gpio_keys_early_suspender);
+	unregister_early_suspend(&gpio_keys_late_suspender);
+#endif
 	platform_driver_unregister(&gpio_keys_device_driver);
 }
 

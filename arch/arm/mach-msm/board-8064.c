@@ -3890,6 +3890,7 @@ struct gpio_keys_button vol_keys_n1[] = {
 		.wakeup            = 0,
 		.debounce_interval = 20,
 		.can_disable       = true,
+		.suspend_disable   = true,
 	},
 	{
 		.code              = KEY_HOME,
@@ -3900,6 +3901,7 @@ struct gpio_keys_button vol_keys_n1[] = {
 		.wakeup            = 0,
 		.debounce_interval = 20,
 		.can_disable       = true,
+		.suspend_disable   = true,
 	},
 	{
 		.code              = KEY_MENU ,
@@ -3910,6 +3912,7 @@ struct gpio_keys_button vol_keys_n1[] = {
 		.wakeup            = 0,
 		.debounce_interval = 20,
 		.can_disable       = true,
+		.suspend_disable   = true,
 	},
 };
 
