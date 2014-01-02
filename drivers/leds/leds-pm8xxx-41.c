@@ -167,7 +167,18 @@ struct pm8xxx_led_data {
 	struct pm8xxx_pwm_duty_cycles *pwm_duty_cycles;
 	struct wled_config_data *wled_cfg;
 	int			max_current;
+	struct delayed_work blink_work;
 };
+
+#ifdef CONFIG_OPPO_N1
+static unsigned int blink_max_brightness = 100;
+static unsigned int blink_on_time = 1000; /* ms */
+static unsigned int blink_off_time = 1000; /* ms */
+static unsigned int blink_status = 0;
+static bool is_blinking = false;
+static bool blink_enabled = true;
+static void blink_force_off(struct pm8xxx_led_data *led);
+#endif
 
 static void led_kp_set(struct pm8xxx_led_data *led, enum led_brightness value)
 {
@@ -475,6 +486,13 @@ static void pm8xxx_led_set(struct led_classdev *led_cdev,
 		return;
 	}
 
+#ifdef CONFIG_OPPO_N1
+    // if brightness is explicitly set stop blinking in any case
+	if (is_blinking){
+		blink_force_off(led);
+	}
+#endif
+
 	led->cdev.brightness = value;
 	schedule_work(&led->work);
 }
@@ -772,6 +790,167 @@ static int pm8xxx_led_pwm_configure(struct pm8xxx_led_data *led)
 	return rc;
 }
 
+#ifdef CONFIG_OPPO_N1
+static void blink_work_func(struct work_struct *work)
+{
+	struct pm8xxx_led_data *led = container_of(work,
+					 struct pm8xxx_led_data, blink_work.work);
+	unsigned int b = blink_max_brightness;
+	pr_debug("%s: %s %d\n", __func__, led->cdev.name, blink_status);
+ 
+	if (blink_status){
+		if (b > led->cdev.max_brightness)
+			b = led->cdev.max_brightness;
+		led->cdev.brightness = b;
+		schedule_work(&led->work);
+		blink_status = 0;
+		schedule_delayed_work(&led->blink_work, msecs_to_jiffies(blink_on_time));
+	} else {
+		led->cdev.brightness = 0;
+		schedule_work(&led->work);
+		blink_status = 1;
+		schedule_delayed_work(&led->blink_work, msecs_to_jiffies(blink_off_time));
+	}
+}
+
+static void blink_force_off(struct pm8xxx_led_data *led)
+{
+    pr_info("%s: %s %d\n", __func__, led->cdev.name, led->id);
+	cancel_delayed_work_sync(&led->blink_work);
+	blink_status = 0;
+	led->cdev.brightness = 0;
+	schedule_work(&led->work);
+	is_blinking = false;
+}
+
+static ssize_t blink_show(struct device *dev, 
+			struct device_attribute *attr,
+			char *buf) 
+{
+	return sprintf(buf, "%u\n", is_blinking);
+}
+
+static ssize_t blink_store(struct device *dev,
+				struct device_attribute *attr, const char *buf,
+				size_t count)
+{
+	struct led_classdev *led_cdev = dev_get_drvdata(dev);
+	struct	pm8xxx_led_data *led = container_of(led_cdev, struct pm8xxx_led_data, cdev);
+	unsigned long value = simple_strtoul(buf, NULL, 10);
+	
+	if (!blink_enabled)
+		return count;
+
+	pr_info("%s: %s %d\n", __func__, led->cdev.name, led->id);
+	
+	if (value == 0){
+		// make sure its off afterwards
+		blink_force_off(led);
+	} else {
+		blink_status = 1;
+		schedule_work(&led->blink_work.work);
+		is_blinking = true;
+	}
+	return count;
+}
+
+static DEVICE_ATTR(blink, S_IWUSR | S_IRUGO, blink_show, blink_store);
+
+static ssize_t blink_on_time_store(struct device *dev,
+				struct device_attribute *attr, const char *buf,
+				size_t count)
+{
+	unsigned long value = simple_strtoul(buf, NULL, 10);	
+	pr_info("%s: %lu\n", __func__, value);
+	
+	blink_on_time = value;
+	return count;
+}
+
+static ssize_t blink_on_time_show(struct device *dev, 
+			struct device_attribute *attr,
+			char *buf) 
+{
+	return sprintf(buf, "%u\n", blink_on_time);
+}
+
+static DEVICE_ATTR(blink_on_time, S_IWUSR | S_IRUGO, blink_on_time_show, blink_on_time_store);
+
+static ssize_t blink_off_time_store(struct device *dev,
+				struct device_attribute *attr, const char *buf,
+				size_t count)
+{
+	unsigned long value = simple_strtoul(buf, NULL, 10);	
+	pr_info("%s: %lu\n", __func__, value);
+	
+	blink_off_time = value;
+	return count;
+}
+
+static ssize_t blink_off_time_show(struct device *dev, 
+			struct device_attribute *attr,
+			char *buf) 
+{
+	return sprintf(buf, "%u\n", blink_off_time);
+}
+
+static DEVICE_ATTR(blink_off_time, S_IWUSR | S_IRUGO, blink_off_time_show, blink_off_time_store);
+
+static ssize_t blink_max_brightness_store(struct device *dev,
+				struct device_attribute *attr, const char *buf,
+				size_t count)
+{
+	struct led_classdev *led_cdev = dev_get_drvdata(dev);
+	struct	pm8xxx_led_data *led = container_of(led_cdev, struct pm8xxx_led_data, cdev);
+	unsigned long value = simple_strtoul(buf, NULL, 10);	
+	pr_info("%s: %lu\n", __func__, value);
+	
+	if ( value > led->cdev.max_brightness)
+		value = led->cdev.max_brightness;
+	blink_max_brightness = value;
+	return count;
+}
+
+static ssize_t blink_max_brightness_show(struct device *dev, 
+			struct device_attribute *attr,
+			char *buf) 
+{
+	return sprintf(buf, "%u\n", blink_max_brightness);
+}
+
+static DEVICE_ATTR(blink_max_brightness, S_IWUSR | S_IRUGO, blink_max_brightness_show, blink_max_brightness_store);
+
+static ssize_t blink_enabled_store(struct device *dev,
+				struct device_attribute *attr, const char *buf,
+				size_t count)
+{
+	struct led_classdev *led_cdev = dev_get_drvdata(dev);
+	struct	pm8xxx_led_data *led = container_of(led_cdev, struct pm8xxx_led_data, cdev);
+	unsigned long value = simple_strtoul(buf, NULL, 10);	
+	pr_info("%s: %lu\n", __func__, value);
+	
+	if (value > 1)
+		value = 1;
+
+	blink_enabled = value;
+	
+	if (!blink_enabled && is_blinking){
+		blink_force_off(led);
+	}
+
+	return count;
+}
+
+static ssize_t blink_enabled_show(struct device *dev, 
+			struct device_attribute *attr,
+			char *buf) 
+{
+	return sprintf(buf, "%u\n", blink_enabled);
+}
+
+static DEVICE_ATTR(blink_enabled, S_IWUSR | S_IRUGO, blink_enabled_show, blink_enabled_store);
+
+#endif
 
 static int __devinit pm8xxx_led_probe(struct platform_device *pdev)
 {
@@ -868,6 +1047,38 @@ static int __devinit pm8xxx_led_probe(struct platform_device *pdev)
 			goto fail_id_check;
 		}
 
+#ifdef CONFIG_OPPO_N1
+		if (!strcmp(led_dat->cdev.name, "button-backlight")) {
+			rc = device_create_file(led_dat->cdev.dev, &dev_attr_blink);
+			if (rc) {
+				dev_err(&pdev->dev, "sysfs_create_file failed!\n");
+				goto fail_id_check;
+			}
+			rc = device_create_file(led_dat->cdev.dev, &dev_attr_blink_on_time);
+			if (rc) {
+				dev_err(&pdev->dev, "sysfs_create_file failed!\n");
+				goto fail_id_check;
+			}
+			rc = device_create_file(led_dat->cdev.dev, &dev_attr_blink_off_time);
+			if (rc) {
+				dev_err(&pdev->dev, "sysfs_create_file failed!\n");
+				goto fail_id_check;
+			}
+			rc = device_create_file(led_dat->cdev.dev, &dev_attr_blink_max_brightness);
+			if (rc) {
+				dev_err(&pdev->dev, "sysfs_create_file failed!\n");
+				goto fail_id_check;
+			}
+			rc = device_create_file(led_dat->cdev.dev, &dev_attr_blink_enabled);
+			if (rc) {
+				dev_err(&pdev->dev, "sysfs_create_file failed!\n");
+				goto fail_id_check;
+			}
+
+			INIT_DELAYED_WORK(&led_dat->blink_work, blink_work_func);
+		}
+#endif
+
 		/* configure default state */
 		if (led_cfg->default_state)
 			led->cdev.brightness = led_dat->cdev.max_brightness;
@@ -889,7 +1100,7 @@ static int __devinit pm8xxx_led_probe(struct platform_device *pdev)
 				if (rc) {
 					dev_err(&pdev->dev, "failed to "
 					"configure LED, error: %d\n", rc);
-					goto fail_id_check;
+					goto fail;
 				}
 			schedule_work(&led->work);
 			}
@@ -898,10 +1109,24 @@ static int __devinit pm8xxx_led_probe(struct platform_device *pdev)
 		}
 	}
 
+
 	platform_set_drvdata(pdev, led);
 
 	return 0;
-
+fail:
+#ifdef CONFIG_OPPO_N1
+	if (i > 0) {
+		for (i = i - 1; i >= 0; i--) {
+			if (!strcmp(led[i].cdev.name, "button-backlight")){
+				device_remove_file(led[i].cdev.dev, &dev_attr_blink);
+				device_remove_file(led[i].cdev.dev, &dev_attr_blink_on_time);
+				device_remove_file(led[i].cdev.dev, &dev_attr_blink_off_time);
+				device_remove_file(led[i].cdev.dev, &dev_attr_blink_max_brightness);
+				device_remove_file(led[i].cdev.dev, &dev_attr_blink_enabled);
+			}
+		}
+	}
+#endif
 fail_id_check:
 	if (i > 0) {
 		for (i = i - 1; i >= 0; i--) {
@@ -923,6 +1148,20 @@ static int __devexit pm8xxx_led_remove(struct platform_device *pdev)
 	struct pm8xxx_led_data *led = platform_get_drvdata(pdev);
 
 	for (i = 0; i < pdata->num_leds; i++) {
+#ifdef CONFIG_OPPO_N1
+		if (!strcmp(led[i].cdev.name, "button-backlight")){
+			device_remove_file(led[i].cdev.dev, &dev_attr_blink);
+			device_remove_file(led[i].cdev.dev, &dev_attr_blink_on_time);
+			device_remove_file(led[i].cdev.dev, &dev_attr_blink_off_time);
+			device_remove_file(led[i].cdev.dev, &dev_attr_blink_max_brightness);
+			device_remove_file(led[i].cdev.dev, &dev_attr_blink_enabled);
+
+			// make sure its off afterwards
+			if (is_blinking){
+				blink_force_off(&led[i]);
+			}
+		}
+#endif
 		cancel_work_sync(&led[i].work);
 		mutex_destroy(&led[i].lock);
 		led_classdev_unregister(&led[i].cdev);
