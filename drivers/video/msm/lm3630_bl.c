@@ -229,7 +229,7 @@ int lm3630_bkl_control(unsigned char bkl_level)
 	}
 	
 	rc = lm3630_i2c_write(0x03, bkl_level);
-	pr_info("%s: set bkl level = %d, read level after write = %d ,rc = %d\n",
+	pr_debug("%s: set bkl level = %d, read level after write = %d ,rc = %d\n",
 		 __func__,(int)bkl_level,lm3630_bkl_readout(),rc);
 
 	return rc;
