@@ -59,7 +59,7 @@
 #else
 #define TP_UPDATE_FIRMWARE  0
 #endif
-#define SUPPORT_DOUBLE_TAP  0
+#define SUPPORT_DOUBLE_TAP  1
 //#define SUPPORT_GLOVES_MODE  //ranfei modify for PVT
 /*****************************************************************/
 
