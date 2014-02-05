@@ -84,16 +84,13 @@ static int __init mipi_cmd_orise_oppo_n1_pt_init(void)
     pinfo.bl_max = 255;
     pinfo.bl_min = 0;
     pinfo.fb_num = 2;
-    //pinfo.clk_rate = 550000000;
-    //pinfo.clk_rate = 499000000;
     pinfo.clk_rate = 900000000;
     pinfo.mipi.esc_byte_ratio = 4;
     pinfo.lcd.vsync_enable = TRUE;
     pinfo.lcd.hw_vsync_mode = TRUE;
-    pinfo.lcd.refx100 = 6300; /* adjust refx100 to prevent tearing */
-	//pinfo.lcd.refx100 = 6204;
-    //pinfo.lcd.refx100 = 6105;
-    //pinfo.lcd.refx100 = 6205;
+    /* OPPO 2013-12-10 gousj Add begin for new panel adaption increase frame rate */
+    pinfo.lcd.refx100 = 6400; /* adjust refx100 to prevent tearing */
+    /* OPPO 2013-12-10 gousj Add end */
     pinfo.mipi.mode = DSI_CMD_MODE;
     pinfo.mipi.dst_format = DSI_CMD_DST_FORMAT_RGB888;
     pinfo.mipi.vc = 0;

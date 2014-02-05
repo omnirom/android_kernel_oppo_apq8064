@@ -1861,7 +1861,13 @@ static void msm_cam_server_subdev_notify(struct v4l2_subdev *sd,
 		{
 			if (NOTIFY_VFE_MSG_OUT == notification)
 			{
+				struct sensor_cfg_data cfgarg;
 				printk("%s: capture stream output \r\n", __func__);
+				/* send cmd to get exif info */
+				cfgarg.cfgtype = CFG_FRAME_OUT;
+				if (p_mctl && p_mctl->sensor_sdev)
+				    v4l2_subdev_call(p_mctl->sensor_sdev, core, ioctl,
+					VIDIOC_MSM_SENSOR_CFG, &cfgarg);
 			}
 		}
 #endif
