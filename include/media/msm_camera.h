@@ -1061,8 +1061,9 @@ struct msm_snapshot_pp_status {
 #define CFG_SET_CAF_RESULT		  78
 #define CFG_GET_FLASH_INFO	  	  79
 #define CFG_SET_FLIP_HINT	  	  80
-#define CFG_ACTUAOTOR_REG_INIT    81
-#define CFG_MAX                   82
+#define CFG_FRAME_OUT			  81
+#define CFG_ACTUAOTOR_REG_INIT    82
+#define CFG_MAX                   83
 #endif
 /* OPPO 2013-07-24 lanhe Add end */
 
@@ -1417,6 +1418,7 @@ struct cord {
 };
 #else
 struct cord {
+	int8_t mode;
 	uint32_t x;
 	uint32_t y;
 	uint32_t dx;

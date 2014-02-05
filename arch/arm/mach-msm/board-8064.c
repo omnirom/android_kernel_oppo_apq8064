@@ -1971,7 +1971,7 @@ static int oppo_touchpad_power(int on) {
 #if 0
     if((get_pcb_version() >= PCB_VERSION_EVT3_N1T)&&(get_pcb_version() <= PCB_VERSION_PVT_N1T)) {
 #else
-	if((get_pcb_version() >= PCB_VERSION_EVT3_N1F)&&(get_pcb_version() <= PCB_VERSION_PVT_N1T)) {
+	if((get_pcb_version() >= PCB_VERSION_EVT3_N1F)&&(get_pcb_version() <= PCB_VERSION_PVT_N1W)) {
 #endif
 /* OPPO 2013-10-15 ranfei Modify end */
         
