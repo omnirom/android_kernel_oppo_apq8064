@@ -81,7 +81,9 @@ struct msm_actuator_ctrl_t {
 	uint16_t reg_tbl_size;
 	struct msm_actuator_reg_params_t reg_tbl[MAX_ACTUATOR_REG_TBL_SIZE];
 /* OPPO 2013-04-27 yxq Add begin for reason */
+#ifdef CONFIG_VENDOR_EDIT
     struct damping_params_t ringing_params[MAX_ACTUATOR_REGION];
+#endif
 /* OPPO 2013-04-27 yxq Add end */
 	uint16_t region_size;
 	void *user_data;

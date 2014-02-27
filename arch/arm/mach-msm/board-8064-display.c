@@ -546,7 +546,7 @@ int mipi_dsi_panel_power(int on)
 			pr_err("enable l22 failed, rc=%d\n", rc);
 			return -ENODEV;
 		}
-		mdelay(10);
+		mdelay(5);
 /* OPPO 2012-08-31 zhengzk Modify end */
 
 
@@ -556,9 +556,12 @@ int mipi_dsi_panel_power(int on)
 			pr_err("%s: unable to enable LCD_5V_EN!!!!!!!!!!!!\n", __func__);
 			return -ENODEV;
 		}
+        mdelay(5);
 
 		gpio_set_value_cansleep(gpio36, 0);
 		gpio_set_value_cansleep(gpio25, 1);
+
+		mdelay(10);
 #endif
 		rc = regulator_set_optimum_mode(reg_l11, 110000);
 		if (rc < 0) {

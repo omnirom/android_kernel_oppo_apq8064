@@ -282,10 +282,10 @@ static int msm_ispif_config(struct ispif_device *ispif,
 		if (rc < 0) {
 			pr_err("%s:%d failed rc %d\n", __func__, __LINE__, rc);
 /* OPPO 2013-08-19 lanhe Modify for N1 flash capture sync start */
-#ifndef CONFIG_M9MO
-			return rc;
-#else
+#ifdef CONFIG_OPPO_N1
 			rc = 0;
+#else
+			return rc;
 #endif
 /* OPPO 2013-08-19 lanhe Modify end */
 		}

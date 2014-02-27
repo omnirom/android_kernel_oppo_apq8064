@@ -192,7 +192,7 @@ static int msm_get_sensor_info(
 	D("%s: sensor_name %s\n", __func__, sdata->sensor_name);
 
 /* OPPO 2013-07-29 lanhe Modify for m9m0 sensor info start */
-#ifdef CONFIG_M9MO
+#ifdef CONFIG_OPPO_N1
 	if(memcmp(sdata->sensor_name,"m9mo",4)==0)
 	{
 		memcpy(&info.name[0], sdata->sensor_name, MAX_SENSOR_NAME);
