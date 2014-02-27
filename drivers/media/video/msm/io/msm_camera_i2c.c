@@ -41,7 +41,7 @@ int32_t msm_camera_i2c_rxdata(struct msm_camera_i2c_client *dev_client,
 }
 
 /* OPPO 2013-07-24 lanhe Add function for more write less read by i2c start */
-#ifdef CONFIG_M9MO
+#ifdef CONFIG_OPPO_N1
 int32_t msm_vendor_i2c_rxdata(struct msm_camera_i2c_client *dev_client,
 	unsigned char *rxdata, int tx_len, int data_length)
 {

@@ -946,7 +946,7 @@ struct msm_stats_buf {
 #define MSM_V4L2_EVT_SUB_MASK	13
 #define MSM_V4L2_PRIVATE_CMD    14
 /* OPPO 2013-07-29 lanhe Modify for m9m0 caf action start */
-#ifndef CONFIG_M9MO
+#ifndef CONFIG_OPPO_N1
 #define MSM_V4L2_MAX			15
 #else
 #define MSM_V4L2_VENDOR_CMD     15
@@ -1034,9 +1034,8 @@ struct msm_snapshot_pp_status {
 #define CFG_HDR_UPDATE                57
 
 /* OPPO 2013-07-24 lanhe Add for m9mo start */
-#ifndef CONFIG_M9MO
-#define CFG_ACTUAOTOR_REG_INIT        58
-#define CFG_MAX                       59
+#ifndef CONFIG_OPPO_N1
+#define CFG_MAX                       58
 #else
 #define CFG_SET_AF_MODE			  58
 #define CFG_SET_AE_MODE           59
@@ -1062,8 +1061,7 @@ struct msm_snapshot_pp_status {
 #define CFG_GET_FLASH_INFO	  	  79
 #define CFG_SET_FLIP_HINT	  	  80
 #define CFG_FRAME_OUT			  81
-#define CFG_ACTUAOTOR_REG_INIT    82
-#define CFG_MAX                   83
+#define CFG_MAX                   82
 #endif
 /* OPPO 2013-07-24 lanhe Add end */
 
@@ -1411,7 +1409,7 @@ struct mirror_flip {
 };
 
 /* OPPO 2013-07-24 lanhe Modify for m9mo Touch AE&AF start */
-#ifndef CONFIG_M9MO
+#ifndef CONFIG_OPPO_N1
 struct cord {
 	uint32_t x;
 	uint32_t y;
@@ -1737,7 +1735,7 @@ struct sensor_cfg_data {
 		int32_t vision_mode_enable;
 		int32_t vision_ae;
 /* OPPO 2013-07-24 lanhe And for m9mo Touch AE&AF start */
-#ifdef CONFIG_M9MO
+#ifdef CONFIG_OPPO_N1
 		struct cord af_cord;
 		int af_mode;
 		int flash_mode;

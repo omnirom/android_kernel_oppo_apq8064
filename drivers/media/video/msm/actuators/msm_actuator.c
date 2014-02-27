@@ -238,6 +238,7 @@ static int32_t msm_actuator_move_focus(
 	int16_t dest_step_pos = move_params->dest_step_pos;
 	uint16_t curr_lens_pos = 0;
 	int dir = move_params->dir;
+#ifdef CONFIG_MSM_CAMERA_DEBUG
 	int32_t num_steps = move_params->num_steps;
 	struct damping_params_t ringing_params_kernel;
 
@@ -252,19 +253,10 @@ static int32_t msm_actuator_move_focus(
 		__func__,
 		dir,
 		num_steps);
+#endif
 
 	if (dest_step_pos == a_ctrl->curr_step_pos)
 		return rc;
-
-/* OPPO 2013-04-27 yxq Add begin for reason */
-    if (copy_from_user(&a_ctrl->ringing_params,
-        (void *)move_params->ringing_params, 
-        a_ctrl->region_size * sizeof(struct damping_params_t))) {
-        pr_err("%s copy ringing params fail\n", __func__);
-        return -EFAULT;
-    }
-    move_params->ringing_params = a_ctrl->ringing_params;
-/* OPPO 2013-04-27 yxq Add end */
 
 	if ((sign_dir > MSM_ACTUATOR_MOVE_SIGNED_NEAR) ||
 		(sign_dir < MSM_ACTUATOR_MOVE_SIGNED_FAR)) {
@@ -287,6 +279,18 @@ static int32_t msm_actuator_move_focus(
 		a_ctrl->curr_step_pos);
 		return -EFAULT;
 	}
+
+#ifdef CONFIG_VENDOR_EDIT
+	/* OPPO 2013-04-27 yxq Add begin for reason */
+    if (copy_from_user(&a_ctrl->ringing_params,
+        (void *)move_params->ringing_params,
+        a_ctrl->region_size * sizeof(struct damping_params_t))) {
+        pr_err("%s copy ringing params fail\n", __func__);
+        return -EFAULT;
+    }
+    move_params->ringing_params = a_ctrl->ringing_params;
+	/* OPPO 2013-04-27 yxq Add end */
+#endif
 
 	curr_lens_pos = a_ctrl->step_position_table[a_ctrl->curr_step_pos];
 	a_ctrl->i2c_tbl_index = 0;

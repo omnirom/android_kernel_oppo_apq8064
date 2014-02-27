@@ -30,7 +30,9 @@
 #include "msm_vfe32.h"
 
 atomic_t irq_cnt;
+#ifdef CONFIG_VENDOR_EDIT
 int overflow_cnt = 0;/*OPPO*/
+#endif
 static wait_queue_head_t recovery_wait;
 
 #define VFE32_AXI_OFFSET 0x0050
@@ -725,7 +727,9 @@ static void vfe32_stop(struct vfe32_ctrl_type *vfe32_ctrl)
 
 	/* in either continuous or snapshot mode, stop command can be issued
 	 * at any time. stop camif immediately. */
+#ifdef CONFIG_VENDOR_EDIT
 	overflow_cnt = 0;/*OPPO*/
+#endif
 	if (!vfe32_ctrl->share_ctrl->dual_enabled)
 		msm_camera_io_w_mb(CAMIF_COMMAND_STOP_IMMEDIATELY,
 			vfe32_ctrl->share_ctrl->vfebase + VFE_CAMIF_COMMAND);
@@ -1195,7 +1199,9 @@ static int vfe32_reset(struct vfe32_ctrl_type *vfe32_ctrl)
 {
 	uint32_t irq_mask1, irq_mask;
 	atomic_set(&vfe32_ctrl->share_ctrl->vstate, 0);
+#ifdef CONFIG_VENDOR_EDIT
 	overflow_cnt = 0;/*OPPO*/
+#endif
 	msm_camera_io_w(VFE_MODULE_RESET_CMD,
 		vfe32_ctrl->share_ctrl->vfebase + VFE_MODULE_RESET);
 	msm_camera_io_w(0,
@@ -3319,6 +3325,17 @@ static int vfe32_proc_general(
 		}
 
 		vfe32_stop(vfe32_ctrl);
+#ifdef CONFIG_OPPO_N1
+		if(strcmp(pmctl->sdata->sensor_name,"m9mo") == 0)
+		{
+			struct sensor_cfg_data cfgarg;
+			cfgarg.cfgtype = CFG_STOP_STREAM;
+			if (pmctl && pmctl->sensor_sdev)
+			    pmctl->mctl_cmd(pmctl, MSM_CAM_IOCTL_SENSOR_IO_CFG,
+				(unsigned long)(&cfgarg));
+			
+		}
+#endif
 		break;
 
 	case VFE_CMD_SYNC_TIMER_SETTING:
@@ -4376,6 +4393,7 @@ static void vfe32_process_reset_irq(
 	}
 }
 
+#ifdef CONFIG_VENDOR_EDIT
 static void vfe32_process_overflow_error(
 	struct vfe_share_ctrl_t *share_ctrl, uint32_t errStatus)
 {
@@ -4477,13 +4495,15 @@ static void vfe32_process_overflow_error(
 	pr_err("vfe32: process overflow err %d output mode 0x%x\n",
 		overflow_cnt,share_ctrl->comp_output_mode);
 }
+#endif
 
 static void vfe32_process_camif_sof_irq(
 		struct vfe32_ctrl_type *vfe32_ctrl)
 {
+#ifdef CONFIG_VENDOR_EDIT
 	if(overflow_cnt)
 		vfe32_process_overflow_error(vfe32_ctrl->share_ctrl ,0);
-
+#endif
 	if (vfe32_ctrl->share_ctrl->operation_mode ==
 		VFE_OUTPUTS_RAW) {
 		if (atomic_cmpxchg(
@@ -4628,7 +4648,7 @@ static void vfe32_process_error_irq(
 static void vfe32_process_common_error_irq(
 	struct axi_ctrl_t *axi_ctrl, uint32_t errStatus)
 {
-
+#ifdef CONFIG_VENDOR_EDIT
 	if(errStatus &
 		(VFE32_IMASK_IMG_MAST_0_BUS_OVFL|
 		VFE32_IMASK_IMG_MAST_1_BUS_OVFL|
@@ -4639,6 +4659,7 @@ static void vfe32_process_common_error_irq(
 		VFE32_IMASK_IMG_MAST_6_BUS_OVFL)) {
 		vfe32_process_overflow_error(axi_ctrl->share_ctrl, errStatus);
 	}
+#endif
 
 	if (errStatus & VFE32_IMASK_IMG_MAST_0_BUS_OVFL)
 		pr_err("vfe32_irq: image master 0 bus overflow\n");
@@ -6373,9 +6394,11 @@ static int msm_axi_subdev_s_crystal_freq(struct v4l2_subdev *sd,
 	int round_rate;
 	struct axi_ctrl_t *axi_ctrl = v4l2_get_subdevdata(sd);
 	if (axi_ctrl->share_ctrl->dual_enabled) {
-		pr_info("%s axi_ctrl->share_ctrl->dual_enabled hence returning "\
+		CDBG("%s Dual camera Enabled hence returning "\
 			"without clock change\n", __func__);
+#ifndef CONFIG_VENDOR_EDIT
 		return rc;
+#endif
 	}
 	round_rate = clk_round_rate(axi_ctrl->vfe_clk[0], freq);
 	if (rc < 0) {
@@ -6482,7 +6505,7 @@ int msm_axi_subdev_init(struct v4l2_subdev *sd,
 	msm_camio_bus_scale_cfg(
 		mctl->sdata->pdata->cam_bus_scale_table, S_INIT);
 
-	pr_info("%s: axi_ctrl->share_ctrl->dual_enabled ? = %d\n", __func__,
+	CDBG("%s: axi_ctrl->share_ctrl->dual_enabled ? = %d\n", __func__,
 			axi_ctrl->share_ctrl->dual_enabled);
 	if (axi_ctrl->share_ctrl->dual_enabled){
 		pr_info("%s: Scaling bus config for dual bus vectors\n",
@@ -6550,9 +6573,6 @@ int msm_vfe_subdev_init(struct v4l2_subdev *sd)
 	else
 		vfe32_ctrl->vfe_sof_count_enable = true;
 
-	pr_info("%s: vfe32_ctrl->share_ctrl->dual_enabled ? = %d\n", __func__,
-			vfe32_ctrl->share_ctrl->dual_enabled);
-
 	vfe32_ctrl->update_abcc = false;
 	vfe32_ctrl->hfr_mode = HFR_MODE_OFF;
 	vfe32_ctrl->share_ctrl->rdi_comp = VFE_RDI_COMPOSITE;
@@ -6613,10 +6633,12 @@ void msm_axi_subdev_release(struct v4l2_subdev *sd)
 
 void msm_vfe_subdev_release(struct v4l2_subdev *sd)
 {
+#ifdef CONFIG_MSM_CAMERA_DEBUG
 	struct vfe32_ctrl_type *vfe32_ctrl =
 		(struct vfe32_ctrl_type *)v4l2_get_subdevdata(sd);
 	CDBG("vfe subdev release %p\n",
 		vfe32_ctrl->share_ctrl->vfebase);
+#endif
 }
 
 int msm_axi_set_low_power_mode(struct v4l2_subdev *sd, void *arg)
@@ -6635,7 +6657,6 @@ int msm_axi_set_low_power_mode(struct v4l2_subdev *sd, void *arg)
 		axi_ctrl->share_ctrl->dual_enabled = 0;
 	else
 		axi_ctrl->share_ctrl->dual_enabled = 1;
-	pr_info("%s: dual_enabled=%d\n", __func__, axi_ctrl->share_ctrl->dual_enabled);
 	return rc;
 }
 
@@ -6897,7 +6918,11 @@ void axi_start(struct msm_cam_media_controller *pmctl,
 		break;
 	case AXI_CMD_CAPTURE:
 	case AXI_CMD_RAW_CAPTURE:
-		if (!axi_ctrl->share_ctrl->dual_enabled)
+#ifdef CONFIG_VENDOR_EDIT
+		if (axi_ctrl->share_ctrl->dual_enabled)
+#else
+        if (!axi_ctrl->share_ctrl->dual_enabled)
+#endif
 			msm_camio_bus_scale_cfg(
 			pmctl->sdata->pdata->cam_bus_scale_table, S_CAPTURE);
 		break;
@@ -6911,7 +6936,11 @@ void axi_start(struct msm_cam_media_controller *pmctl,
 			msm_camio_bus_scale_cfg(
 				pmctl->sdata->pdata->cam_bus_scale_table,
 				S_LOW_POWER);
-		else if (!axi_ctrl->share_ctrl->dual_enabled)
+#ifdef CONFIG_VENDOR_EDIT
+		else if (axi_ctrl->share_ctrl->dual_enabled)
+#else 
+        else if (!axi_ctrl->share_ctrl->dual_enabled)
+#endif
 			msm_camio_bus_scale_cfg(
 				pmctl->sdata->pdata->cam_bus_scale_table,
 				S_ZSL);
