@@ -31,7 +31,7 @@
 static struct kobject *auto_sysfs_kobject;
 #define DEFAULT_SCREEN_OFF_FREQ_CAP 702000
 static unsigned int screen_off_max_freq = DEFAULT_SCREEN_OFF_FREQ_CAP;
-static bool screen_off_cap = true;
+static bool screen_off_cap = false;
 #ifdef CONFIG_HAS_EARLYSUSPEND
 struct early_suspend cpufreq_early_suspender;
 #endif

@@ -1641,10 +1641,16 @@ config MSM_DALRPC_TEST
 
 config USERSPACE_VOLTAGE_CONTROL
 	bool "Enable Userspace CPU Voltage Control"
-	default y
+	default n
 	help
 	  Userspace Voltage Control
-	  
+
+config LOW_CORE_FREQ
+	bool "Enable low core frequencies"
+	default n
+	help
+	  Low core frequencies
+
 if CPU_FREQ_MSM
 
 config MSM_CPU_FREQ_SET_MIN_MAX

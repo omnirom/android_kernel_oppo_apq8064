@@ -40,7 +40,7 @@ static unsigned int max_cpus = CONFIG_NR_CPUS;
 
 #define DEFAULT_SCREEN_OFF_CPU_CAP 2
 static unsigned int screen_off_max_cpus = DEFAULT_SCREEN_OFF_CPU_CAP;
-static bool screen_off_cap = true;
+static bool screen_off_cap = false;
 #ifdef CONFIG_HAS_EARLYSUSPEND
 struct early_suspend cpuquiet_early_suspender;
 #endif
