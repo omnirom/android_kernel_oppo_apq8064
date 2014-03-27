@@ -96,7 +96,7 @@
 #define QCOM_OUI2         0xA0
 #define QCOM_OUI3         0xC6
 #define QCOM_VENDOR_IE_AGE_TYPE  0x100
-#define QCOM_VENDOR_IE_AGE_LEN   4
+#define QCOM_VENDOR_IE_AGE_LEN   11
 
 #ifdef FEATURE_WLAN_TDLS
 #define WLAN_IS_TDLS_SETUP_ACTION(action) \
@@ -124,11 +124,22 @@ int wlan_hdd_cfg80211_pmksa_candidate_notify(
                     int index, bool preauth );
 #endif
 
+#ifdef FEATURE_WLAN_LFR_METRICS
+VOS_STATUS wlan_hdd_cfg80211_roam_metrics_preauth(hdd_adapter_t *pAdapter,
+                                                  tCsrRoamInfo *pRoamInfo);
+
+VOS_STATUS wlan_hdd_cfg80211_roam_metrics_preauth_status(
+    hdd_adapter_t *pAdapter, tCsrRoamInfo *pRoamInfo, bool preauth_status);
+
+VOS_STATUS wlan_hdd_cfg80211_roam_metrics_handover(hdd_adapter_t *pAdapter,
+                                                   tCsrRoamInfo *pRoamInfo);
+#endif
+
 #ifdef FEATURE_WLAN_WAPI
 void wlan_hdd_cfg80211_set_key_wapi(hdd_adapter_t* pAdapter,
               u8 key_index, const u8 *mac_addr, u8 *key , int key_Len);
 #endif
-struct wiphy *wlan_hdd_cfg80211_init(int priv_size);
+struct wiphy *wlan_hdd_cfg80211_wiphy_alloc(int priv_size);
 
 int wlan_hdd_cfg80211_scan( struct wiphy *wiphy,
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(3,6,0))
@@ -136,11 +147,12 @@ int wlan_hdd_cfg80211_scan( struct wiphy *wiphy,
 #endif
                             struct cfg80211_scan_request *request);
 
-int wlan_hdd_cfg80211_register(struct device *dev,
+int wlan_hdd_cfg80211_init(struct device *dev,
                                struct wiphy *wiphy,
                                hdd_config_t *pCfg
                                          );
 
+int wlan_hdd_cfg80211_register( struct wiphy *wiphy);
 void wlan_hdd_cfg80211_post_voss_start(hdd_adapter_t* pAdapter);
 
 void wlan_hdd_cfg80211_pre_voss_stop(hdd_adapter_t* pAdapter);
@@ -149,6 +161,7 @@ int wlan_hdd_crda_reg_notifier(struct wiphy *wiphy, struct regulatory_request *r
 int wlan_hdd_get_crda_regd_entry(struct wiphy *wiphy, hdd_config_t *pCfg);
 extern v_VOID_t hdd_connSetConnectionState( hdd_station_ctx_t *pHddStaCtx,
                                         eConnectionState connState );
+VOS_STATUS wlan_hdd_validate_operation_channel(hdd_adapter_t *pAdapter,int channel);
 #ifdef FEATURE_WLAN_TDLS
 int wlan_hdd_cfg80211_send_tdls_discover_req(struct wiphy *wiphy,
                             struct net_device *dev, u8 *peer);
@@ -157,6 +170,6 @@ int wlan_hdd_cfg80211_send_tdls_discover_req(struct wiphy *wiphy,
 extern void wlan_hdd_cfg80211_update_replayCounterCallback(void *callbackContext,
                             tpSirGtkOffloadGetInfoRspParams pGtkOffloadGetInfoRsp);
 #endif
-
+void* wlan_hdd_change_country_code_cb(void *pAdapter);
 
 #endif

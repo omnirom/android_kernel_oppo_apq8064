@@ -607,16 +607,23 @@ WDI_FillTxBd
          * Sanity: Force HW frame translation OFF for mgmt frames.
          --------------------------------------------------------------------*/
          /* apply to both ucast/mcast mgmt frames */
-         if (useStaRateForBcastFrames)
-         {
-             pBd->bdRate = (ucUnicastDst)? WDI_BDRATE_BCMGMT_FRAME : WDI_TXBD_BDRATE_DEFAULT; 
-         }
-         else
+         /* Probe requests are sent using BD rate */
+         if( ucSubType ==  WDI_MAC_MGMT_PROBE_REQ )
          {
              pBd->bdRate = WDI_BDRATE_BCMGMT_FRAME;
          }
-
-         if ( ucTxFlag & WDI_USE_BD_RATE2_FOR_MANAGEMENT_FRAME) 
+         else
+         {
+             if (useStaRateForBcastFrames)
+             {
+                 pBd->bdRate = (ucUnicastDst)? WDI_BDRATE_BCMGMT_FRAME : WDI_TXBD_BDRATE_DEFAULT;
+             }
+             else
+             {
+                 pBd->bdRate = WDI_BDRATE_BCMGMT_FRAME;
+             }
+         }
+         if ( ucTxFlag & WDI_USE_BD_RATE2_FOR_MANAGEMENT_FRAME)
          {
            pBd->bdRate = WDI_BDRATE_CTRL_FRAME;
          }
@@ -677,8 +684,6 @@ WDI_FillTxBd
            if (WDI_STATUS_SUCCESS != wdiStatus) 
            {
                 WPAL_TRACE(eWLAN_MODULE_DAL_DATA, eWLAN_PAL_TRACE_LEVEL_ERROR, "WDI_STATableFindStaidByAddr failed");
-                WPAL_TRACE(eWLAN_MODULE_DAL_DATA, eWLAN_PAL_TRACE_LEVEL_ERROR, "STA ID = %d " MAC_ADDRESS_STR,
-                                        ucStaId, MAC_ADDR_ARRAY(*(wpt_macAddr*)pAddr2));
                 return WDI_STATUS_E_NOT_ALLOWED;
            }
 #else

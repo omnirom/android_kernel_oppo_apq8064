@@ -610,6 +610,28 @@ limHandleCFGparamUpdate(tpAniSirGlobal pMac, tANI_U32 cfgId)
         pMac->lim.gLimAssocStaLimit = (tANI_U16)val1;
         break;
 
+    case WNI_CFG_DEL_ALL_RX_BA_SESSIONS_2_4_G_BTC:
+        if (wlan_cfgGetInt
+           (pMac, WNI_CFG_DEL_ALL_RX_BA_SESSIONS_2_4_G_BTC, &val1) !=
+                 eSIR_SUCCESS)
+        {
+            limLog(pMac, LOGE,
+                 FL( "Unable to get WNI_CFG_DEL_ALL_RX_BA_SESSIONS_2_4_G_BTC"));
+            break;
+        }
+        if (val1)
+        {
+            limLog(pMac, LOGW,
+                FL("BTC requested to disable all RX BA sessions"));
+            limDelAllBASessionsBtc(pMac);
+        }
+        else
+        {
+            limLog(pMac, LOGW,
+                FL("Resetting the WNI_CFG_DEL_ALL_RX_BA_SESSIONS_2_4_G_BTC"));
+        }
+        break;
+
     default:
             break;
     }
@@ -719,9 +741,13 @@ limUpdateConfig(tpAniSirGlobal pMac,tpPESession psessionEntry)
         limLog(pMac, LOGP, FL("cfg get short preamble failed"));
     psessionEntry->beaconParams.fShortPreamble = (val) ? 1 : 0;
 
-    if (wlan_cfgGetInt(pMac, WNI_CFG_WME_ENABLED, &val) != eSIR_SUCCESS)
-        limLog(pMac, LOGP, FL("cfg get wme enabled failed"));
-    psessionEntry->limWmeEnabled = (val) ? 1 : 0;
+    /* In STA case this parameter is filled during the join request */
+    if (psessionEntry->limSystemRole == eLIM_AP_ROLE)
+    {
+        if (wlan_cfgGetInt(pMac, WNI_CFG_WME_ENABLED, &val) != eSIR_SUCCESS)
+            limLog(pMac, LOGP, FL("cfg get wme enabled failed"));
+        psessionEntry->limWmeEnabled = (val) ? 1 : 0;
+    }
 
     if (wlan_cfgGetInt(pMac, WNI_CFG_WSM_ENABLED, &val) != eSIR_SUCCESS)
         limLog(pMac, LOGP, FL("cfg get wsm enabled failed"));
@@ -732,11 +758,13 @@ limUpdateConfig(tpAniSirGlobal pMac,tpPESession psessionEntry)
         PELOGE(limLog(pMac, LOGE, FL("Can't enable WSM without WME"));)
         psessionEntry->limWsmEnabled = 0;
     }
-
-    if (wlan_cfgGetInt(pMac, WNI_CFG_QOS_ENABLED, &val) != eSIR_SUCCESS)
-        limLog(pMac, LOGP, FL("cfg get qos enabled failed"));
-    psessionEntry->limQosEnabled = (val) ? 1 : 0;
-
+    /* In STA , this parameter is filled during the join request */
+    if (psessionEntry->limSystemRole== eLIM_AP_ROLE)
+    {
+        if (wlan_cfgGetInt(pMac, WNI_CFG_QOS_ENABLED, &val) != eSIR_SUCCESS)
+            limLog(pMac, LOGP, FL("cfg get qos enabled failed"));
+        psessionEntry->limQosEnabled = (val) ? 1 : 0;
+    }
     if (wlan_cfgGetInt(pMac, WNI_CFG_HCF_ENABLED, &val) != eSIR_SUCCESS)
         limLog(pMac, LOGP, FL("cfg get hcf enabled failed"));
     psessionEntry->limHcfEnabled = (val) ? 1 : 0;

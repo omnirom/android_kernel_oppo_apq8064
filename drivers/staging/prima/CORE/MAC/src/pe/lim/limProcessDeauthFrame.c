@@ -136,7 +136,7 @@ limProcessDeauthFrame(tpAniSirGlobal pMac, tANI_U8 *pRxPacketInfo, tpPESession p
       
     if (limCheckDisassocDeauthAckPending(pMac, (tANI_U8*)pHdr->sa))
     {
-        PELOGW(limLog(pMac, LOGE, 
+        PELOGW(limLog(pMac, LOGW,
                     FL("Ignore the Deauth received, while waiting for ack of disassoc/deauth"));)
         limCleanUpDisassocDeauthReq(pMac,(tANI_U8*)pHdr->sa, 1);
         return;
@@ -190,11 +190,11 @@ limProcessDeauthFrame(tpAniSirGlobal pMac, tANI_U8 *pRxPacketInfo, tpPESession p
     else
     {
         // Received Deauth frame in either IBSS
-        // or un-known role. Log error and ignore it
-        limLog(pMac, LOGE,
+        // or un-known role. Log and ignore it
+        limLog(pMac, LOG1,
            FL("received Deauth frame with reasonCode %d in role %d from "),
            reasonCode, psessionEntry->limSystemRole);
-          limPrintMacAddr(pMac, pHdr->sa, LOGE);
+          limPrintMacAddr(pMac, pHdr->sa, LOG1);
 
         return;
     }
@@ -252,7 +252,7 @@ limProcessDeauthFrame(tpAniSirGlobal pMac, tANI_U8 *pRxPacketInfo, tpPESession p
             PELOGE(limLog(pMac, LOGE, FL("received DeAuth from an AP other than we're trying to join. Ignore. "));)
             if (limSearchPreAuthList(pMac, pHdr->sa))
             {
-                PELOGE(limLog(pMac, LOGE, FL("Preauth entry exist. Deleting... "));)
+                PELOG1(limLog(pMac, LOG1, FL("Preauth entry exist. Deleting... "));)
                 limDeletePreAuthNode(pMac, pHdr->sa);
             }
             return;
@@ -339,6 +339,14 @@ limProcessDeauthFrame(tpAniSirGlobal pMac, tANI_U8 *pRxPacketInfo, tpPESession p
                             (tANI_U32 *) &mlmAssocCnf);
                         
                         return;
+
+                    case eLIM_MLM_WT_ADD_STA_RSP_STATE:
+                         psessionEntry->fDeauthReceived = true;
+                         PELOGW(limLog(pMac, LOGW,
+                            FL("Received Deauth frame with Reason Code %d from Peer"),
+                                  reasonCode);
+                         limPrintMacAddr(pMac, pHdr->sa, LOGW);)
+                         return ;
 
                     case eLIM_MLM_IDLE_STATE:
                     case eLIM_MLM_LINK_ESTABLISHED_STATE:

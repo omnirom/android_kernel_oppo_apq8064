@@ -64,6 +64,7 @@
 
 #include "limTrace.h"
 #include "limTimerUtils.h"
+#include "vos_trace.h"
 
 
 #ifdef LIM_TRACE_RECORD
@@ -109,6 +110,7 @@ static tANI_U8* __limTraceGetTimerString( tANI_U16 timerId )
         CASE_RETURN_STRING(eLIM_DEAUTH_ACK_TIMER);
         CASE_RETURN_STRING(eLIM_PERIODIC_JOIN_PROBE_REQ_TIMER);
         CASE_RETURN_STRING(eLIM_INSERT_SINGLESHOT_NOA_TIMER);
+        CASE_RETURN_STRING(eLIM_CONVERT_ACTIVE_CHANNEL_TO_PASSIVE);
         default:
             return( "UNKNOWN" );
             break;
@@ -138,13 +140,13 @@ static tANI_U8* __limTraceGetMgmtDropReasonString( tANI_U16 dropReason )
 
 void limTraceInit(tpAniSirGlobal pMac)
 {
-    macTraceRegister(pMac,  VOS_MODULE_ID_PE, limTraceDump);
+    vosTraceRegister(VOS_MODULE_ID_PE, (tpvosTraceCb)&limTraceDump);
 }
 
 
 
 
-void limTraceDump(tpAniSirGlobal pMac, tpTraceRecord pRecord, tANI_U16 recIndex)
+void limTraceDump(tpAniSirGlobal pMac, tpvosTraceRecord pRecord, tANI_U16 recIndex)
 {
 
     static char *frameSubtypeStr[LIM_TRACE_MAX_SUBTYPES] =
