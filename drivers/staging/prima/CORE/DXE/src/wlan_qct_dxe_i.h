@@ -39,6 +39,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+
 #ifndef WLAN_QCT_DXE_I_H
 #define WLAN_QCT_DXE_I_H
 
@@ -49,9 +50,9 @@
   @brief 
                
    This file contains the external API exposed by the wlan data transfer abstraction layer module.
-   Copyright (c) 2011 QUALCOMM Incorporated.
+   Copyright (c) 2011 Qualcomm Technologies, Inc.
    All Rights Reserved.
-   Qualcomm Confidential and Proprietary
+   Qualcomm Technologies Confidential and Proprietary
 ========================================================================*/
 
 /*===========================================================================
@@ -378,6 +379,7 @@ when           who        what, where, why
 #define WLANDXE_CH_STAT_INT_ED_MASK     0x00002000
 
 #define WLANDXE_CH_STAT_MASKED_MASK     0x00000008
+#define WLANDXE_CH_STAT_ENABLED_MASK    0x00000001
 /* Till here WCNSS DXE register information
  * This is temporary definition location to make compile and unit test
  * If official msmreg.h integrated, this part will be eliminated */
@@ -641,6 +643,7 @@ typedef struct
    wpt_packet                     *freeRXPacket;
    wpt_boolean                     rxPalPacketUnavailable;
    wpt_boolean                     driverReloadInProcessing;
+   wpt_boolean                     smsmToggled;
 } WLANDXE_CtrlBlkType;
 
 /*==========================================================================
