@@ -691,12 +691,13 @@ static int mipi_orise_lcd_on(struct platform_device *pdev)
 {
     struct msm_fb_data_type *mfd;
     mfd = platform_get_drvdata(pdev);
-    pr_info("%s Neal write init sequence start\n",__func__);
 
     if (!mfd)
         return -ENODEV;
     if (mfd->key != MFD_KEY)
         return -EINVAL;
+
+    printk("1080p mipi_orise_lcd_on start\n");
 
 #ifdef MIPI_CMD_INIT
     if(flag_lcd_resume)
@@ -720,7 +721,7 @@ static int mipi_orise_lcd_on(struct platform_device *pdev)
 #endif
             /*OPPO 2013-10-11 zhzhyon Add end*/
 
-            pr_info("Neal write init sequence finish\n");
+            //pr_info("Neal write init sequence finish\n");
         }
         else
         {
@@ -739,7 +740,7 @@ static int mipi_orise_lcd_on(struct platform_device *pdev)
     }
     else
     {
-        pr_info("Neal-------%s: lcd initial!\n",__func__);
+        //pr_info("Neal-------%s: lcd initial!\n",__func__);
         mipi_dsi_cmds_tx(&orise_tx_buf, cmd_mipi_initial_sequence,
                          ARRAY_SIZE(cmd_mipi_initial_sequence));
         /* OPPO 2013-10-10 gousj Add begin for cabc init on system up */
@@ -752,7 +753,7 @@ static int mipi_orise_lcd_on(struct platform_device *pdev)
 #endif
     flag_lcd_off = false;
     flag_lcd_node_onoff = false;
-    pr_info("%s: Neal 1080p n1 panel on complete\n",__func__);
+    printk("1080p mipi_orise_lcd_on complete\n");
     return 0;
 }
 
@@ -765,6 +766,8 @@ static int mipi_orise_lcd_off(struct platform_device *pdev)
     if (mfd->key != MFD_KEY)
         return -EINVAL;
 
+    printk("1080p mipi_orise_lcd_off start\n");
+
     flag_lcd_off = true;
     mipi_dsi_cmds_tx(&orise_tx_buf, cmd_mipi_off_sequence,
                      ARRAY_SIZE(cmd_mipi_off_sequence));
@@ -775,7 +778,7 @@ static int mipi_orise_lcd_off(struct platform_device *pdev)
     irq_state--;
     disable_irq(irq);
 
-    pr_info("%s: Neal 1080p panel off complete\n",__func__);
+    printk("1080p mipi_orise_lcd_on complete\n");
 
     return 0;
 }
@@ -1148,7 +1151,7 @@ static void techeck_work_func( struct work_struct *work )
 {
     if(flag_lcd_off)
     {
-        printk("huyu------%s: lcd is off ing ! don't do this ! te_count = %d \n",__func__,te_count);
+        //printk("huyu------%s: lcd is off ing ! don't do this ! te_count = %d \n",__func__,te_count);
         return ;
     }
     /* OPPO 2013-09-23 gousj Modify begin for TE count adjusting */
@@ -1159,8 +1162,8 @@ static void techeck_work_func( struct work_struct *work )
 #endif
         /* OPPO 2013-09-23 gousj Modify end */
     {
-        printk("huyu------%s: lcd resetting ! te_count = %d \n",__func__,te_count);
-        printk("irq_state=%d\n", irq_state);
+        //printk("huyu------%s: lcd resetting ! te_count = %d \n",__func__,te_count);
+        //printk("irq_state=%d\n", irq_state);
         flag_lcd_resume = true;
 
         spin_lock_irqsave(&te_count_lock, flags);
@@ -1183,7 +1186,7 @@ static void techeck_work_func( struct work_struct *work )
 
 static void pwm_delay_work_func( struct work_struct *work )
 {
-    pr_info("%s pwm on!\n",__func__);
+    //pr_info("%s pwm on!\n",__func__);
     set_backlight_pwm(1);
     return ;
 }
