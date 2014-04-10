@@ -47,6 +47,7 @@
 #include <linux/synaptics_i2c_rmi.h>
 #include <linux/gpio.h>
 #include <linux/proc_fs.h>
+#include <linux/ratelimit.h>
 #include <asm/uaccess.h>
 #include <linux/syscalls.h>
 #include <linux/wakelock.h>
@@ -168,7 +169,7 @@ extern int display_rle_file(char *filename);
 static int syna_log_level = TS_WARNING;
 #define print_ts(level, ...) \
 	do { \
-		if (syna_log_level >= (level)) \
+		if (syna_log_level >= (level) && printk_ratelimit()) \
 			printk("[syna] " __VA_ARGS__); \
 	} while (0) 
 /*****************************************************************/
@@ -287,9 +288,7 @@ static int synaptics_i2c_byte_write(struct synaptics_ts_data *ts,
 static int synaptics_init_panel(struct synaptics_ts_data *ts);
 static int synaptics_set_int_mask(struct synaptics_ts_data *ts, int enable);
 static int synaptics_set_report_mode(struct synaptics_ts_data *ts, uint8_t set_mode);
-/*OPPO yuyi add begin for forbidding N1 button*/
-bool gpio_button_confirm = 0;
-/*OPPO yuyi add end*/
+
 #ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_S2W
 static bool s2w_barrier_reached = false;
 static bool s2w_exec_power_press = true;
@@ -3355,9 +3354,6 @@ static int synaptics_ts_resume(struct i2c_client *client)
 static void synaptics_ts_early_suspend(struct early_suspend *h)
 {
 	struct synaptics_ts_data *ts;
-/*OPPO yuyi add begin for forbidding N1 button*/
-	gpio_button_confirm = 1;
-/*OPPO yuyi add end*/
 	ts = container_of(h, struct synaptics_ts_data, early_suspend);
 	synaptics_ts_suspend(ts->client, PMSG_SUSPEND);
 }
@@ -3368,9 +3364,6 @@ static void synaptics_ts_late_resume(struct early_suspend *h)
 
 	ts = container_of(h, struct synaptics_ts_data, early_suspend);
 	synaptics_ts_resume(ts->client);
-/*OPPO yuyi add begin for forbidding N1 button*/
-	gpio_button_confirm = 0;
-/*OPPO yuyi add end*/
 }
 
 /* OPPO 2013-05-02 huanggd Add begin for double tap*/	

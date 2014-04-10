@@ -341,7 +341,7 @@ static int mipi_orise_rd(struct msm_fb_data_type *mfd, char addr)
 
 static bool flag_lcd_resume = false;
 static bool flag_lcd_reset = false;
-static bool flag_lcd_off = false;
+bool flag_lcd_off = false;
 static int te_count = 0;
 static int irq_state = 1;
 
@@ -357,6 +357,7 @@ static int mipi_orise_lcd_on(struct platform_device *pdev)
 	if (mfd->key != MFD_KEY)
 		return -EINVAL;
 
+	printk("1080p mipi_orise_lcd_on start\n");
 #ifdef MIPI_CMD_INIT
 	if(flag_lcd_resume)
 	{
@@ -412,7 +413,8 @@ static int mipi_orise_lcd_off(struct platform_device *pdev)
 		return -ENODEV;
 	if (mfd->key != MFD_KEY)
 		return -EINVAL;
-
+	printk("1080p mipi_orise_lcd_off start\n");
+	
 	flag_lcd_off = true;
 	
 	mipi_dsi_cmds_tx(&orise_tx_buf, cmd_sleep_and_off,
