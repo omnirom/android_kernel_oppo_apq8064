@@ -20,6 +20,7 @@ date:2013-6-9
 #include <linux/delay.h>
 #include <linux/hrtimer.h>
 #include <linux/pcb_version.h>
+#include <mach/board.h>
 
 /*macores defined begin*/
 #define IRQ_POWER_SUPPLY_UPDATE_DELAY	50//ms
@@ -241,22 +242,11 @@ static struct oppo_battery_fuelgauge *batt_fuelgauge = NULL;
 extern struct mutex i2c_bus_mutex;//sjc1024 for GSBI1_I2C err
 extern int get_boot_mode(void);//sjc0823 for FTM/RF/WLAN
 
-enum {
-	MSM_BOOT_MODE__NORMAL,
-	MSM_BOOT_MODE__FASTBOOT,
-	MSM_BOOT_MODE__RECOVERY,
-	MSM_BOOT_MODE__FACTORY,
-	MSM_BOOT_MODE__RF,
-	MSM_BOOT_MODE__WLAN,
-	MSM_BOOT_MODE__CHARGE,
-};
-
 static bool is_ftm_mode(void)
 {
 	int boot_mode = 0;
 	boot_mode = get_boot_mode();
-	if (boot_mode == MSM_BOOT_MODE__FACTORY || boot_mode == MSM_BOOT_MODE__RF
-			|| boot_mode == MSM_BOOT_MODE__WLAN)
+	if (boot_mode == MSM_BOOT_MODE__FACTORY)
 		return true;
 	else
 		return false;
